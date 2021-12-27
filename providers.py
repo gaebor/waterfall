@@ -88,7 +88,15 @@ def net():
 
 def memory():
     mem_usage = psutil.virtual_memory()
-    return [('memory', mem_usage.percent, 0, convert_size_2(mem_usage.total) + 'B')]
+    total = mem_usage.total
+    return [
+        (
+            'memory',
+            mem_usage.percent,
+            0,
+            f'{convert_size_2(mem_usage.percent * total / 100)}B / {convert_size_2(total)}B',
+        )
+    ]
 
 
 def zpool():
