@@ -5,17 +5,13 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
-from tornado.options import define, options
-
-define("port", default=8888, help="run on the given port", type=int)
-define("refresh", default=5000, help="refresh interval in milliseconds", type=int)
 
 import providers
 
 
 class Application(tornado.web.Application):
     def __init__(self):
-        handlers = [(r"/websocket", StatsServer)]
+        handlers = [(r"/waterfall", StatsServer)]
         super().__init__(handlers)
 
 
@@ -57,12 +53,17 @@ class TimedFunction:
 
 
 def main():
+    tornado.options.define("port", default=8888, help="run on the given port", type=int)
+    tornado.options.define(
+        "refresh", default=5000, help="refresh interval in milliseconds", type=int
+    )
+
     tornado.options.parse_command_line()
     app = Application()
-    app.listen(options.port)
+    app.listen(tornado.options.options.port)
     loop = tornado.ioloop.IOLoop.current()
     timer = TimedFunction()
-    tornado.ioloop.PeriodicCallback(timer.run, options.refresh).start()
+    tornado.ioloop.PeriodicCallback(timer.run, tornado.options.options.refresh).start()
     loop.start()
 
 
