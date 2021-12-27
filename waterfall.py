@@ -51,7 +51,7 @@ def print_bar(text, highlight1_width, highlight2_width=0, total_width=80):
 def print_line(message, factors, width=20):
     for pattern, factor in factors.items():
         for values in message:
-            if re.match(pattern, values[0]) is not None:
+            if re.fullmatch(pattern, values[0]) is not None:
                 text = values[0]
                 if len(values) > 3:
                     text = values[3]
