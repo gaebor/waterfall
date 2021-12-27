@@ -1,8 +1,8 @@
-import re
-from glob import glob
-import subprocess
-from itertools import islice
+from itertools import chain
 from math import log as logarithm
+from time import time
+
+import psutil
 
 
 def convert_size(size_bytes, table, base):
@@ -24,84 +24,77 @@ def convert_size_10(size):
     return convert_size(size, ("", "k", "M", "G", "T", "P", "E", "Z", "Y"), 1000)
 
 
-def check_output(command, stderr=False):
-    return subprocess.run(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=(subprocess.STDOUT if stderr else None),
-        shell=(type(command) == str),
-        universal_newlines=True,
-        check=False,
-    ).stdout
+def time_diff(f):
+    class derivator:
+        def __init__(self, f):
+            self.f = f
+            self.time = time()
+            self.previous = {}
+
+        def __call__(self):
+            results = self.f()
+            derived_values = []
+            current_time = time()
+            time_diff = current_time - self.time
+            for result in results:
+                if result[0] in self.previous:
+                    previous = self.previous[result[0]]
+                    derived_values.append(
+                        (
+                            result[0],
+                            (result[1] - previous[1]) / time_diff,
+                            (result[2] - previous[2]) / time_diff,
+                        )
+                        + result[3:]
+                    )
+                self.previous[result[0]] = result
+            self.time = current_time
+            return derived_values
+
+    return derivator(f)
 
 
-def get_sector_sizes():
-    sector_sizes = {}
-    for file in glob("/sys/block/*/queue/hw_sector_size"):
-        try:
-            with open(file) as f:
-                sector_sizes[file.split("/")[3]] = int(f.read().strip())
-        except OSError:
-            continue
-    return sector_sizes
-
-
-n_cpus = int(check_output('getconf _NPROCESSORS_ONLN'))
-cpu_ticks = int(check_output('getconf CLK_TCK'))
-sector_sizes = get_sector_sizes()
-
-
+@time_diff
 def disk():
-    result = []
-    for line in get_file_content('/proc/diskstats'):
-        if len(line) >= 14 and not line[2].startswith('loop'):
-            multiplier = sector_sizes.get(line[2], 512)
-            result.append((line[2], int(line[5]) * multiplier, int(line[9]) * multiplier))
-    return result
-
-
-def get_file_content(filename):
-    try:
-        with open(filename) as f:
-            content = f.read()
-    except OSError:
-        return
-    for line in content.strip().split('\n'):
-        yield line.split()
+    return [
+        (disk_name, disk_io.read_bytes, disk_io.write_bytes)
+        for disk_name, disk_io in psutil.disk_io_counters(perdisk=True).items()
+    ]
 
 
 def cpu():
-    result = []
-    for line in get_file_content('/proc/stat'):
-        if line[0].startswith('cpu'):
-            result.append(
-                (line[0], (int(line[1]) + int(line[2])) / cpu_ticks, int(line[3]) / cpu_ticks)
-            )
-    return result
+    cpu_times = psutil.cpu_times_percent(percpu=True)
+    padding = int(logarithm(len(cpu_times), 10)) + 1
+
+    frequencies = psutil.cpu_freq(percpu=True)
+    if len(frequencies) == 1:
+        frequencies = frequencies * len(cpu_times)
+
+    cpu_infos = [
+        (f'cpu{i:0{padding}d}', cpu_time.user, cpu_time.system, str(cpu_freq.current) + 'MHz')
+        for i, (cpu_time, cpu_freq) in enumerate(zip(cpu_times, frequencies))
+    ]
+    cpu_infos.append(('cpu', sum(x[1] for x in cpu_infos), sum(x[2] for x in cpu_infos)))
+    return cpu_infos
 
 
+@time_diff
 def net():
-    result = []
-    for line in islice(get_file_content('/proc/net/dev'), 2, None):
-        name = line[0]
-        result.append((line[0], int(line[1]), int(line[9])))
-    return result
+    return [
+        (nic_name, nic_io.bytes_recv, nic_io.bytes_sent)
+        for nic_name, nic_io in psutil.net_io_counters(pernic=True).items()
+    ]
 
 
 def memory():
-    content = {line[0]: int(line[1]) * 1024 for line in get_file_content('/proc/meminfo')}
-    total = content['MemTotal:']
-    secondary = content['Buffers:'] + content['Cached:']
-    primary = total - content['MemFree:'] - secondary
-    return [
-        (
-            f'memory {convert_size_2(primary + secondary)}/{convert_size_2(total)}',
-            primary / total,
-            secondary / total,
-        )
-    ]
+    mem_usage = psutil.virtual_memory()
+    return [('memory', mem_usage.percent, 0, convert_size_2(mem_usage.total) + 'B')]
 
 
 def zpool():
     # sudo zpool list -H -o name,comment,alloc,size,health,failmode
     return []
+
+
+def all():
+    return list(chain(cpu(), memory(), disk(), net()))
