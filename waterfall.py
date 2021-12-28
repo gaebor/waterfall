@@ -9,12 +9,20 @@ import tornado.gen
 from tornado.websocket import websocket_connect
 
 
-class ParseKwargs(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, dict())
-        for value in values:
-            key, value = value.split('=')
-            getattr(namespace, self.dest)[key] = int(value)
+def get_args():
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--url', default='ws://localhost:8888/waterfall', help=' ')
+    parser.add_argument('--width', default=20, help=' ', type=int)
+    parser.add_argument(
+        'descriptors',
+        nargs="*",
+        type=str,
+        default=['.*', '100', '10'],
+        help='pattern [factor [width]] [pattern [factor [width]]] ... where `pattern` is a regex, `factor` is an float and `width` is an integer',
+    )
+    args = parser.parse_args()
+    args.descriptors = parse_column_descriptors(args.descriptors, args.width)
+    return args
 
 
 def text_cap(s, width):
@@ -48,32 +56,50 @@ def print_bar(text, highlight1_width, highlight2_width=0, total_width=80):
     print(part1 + part2 + part3, end='')
 
 
-def print_line(message, factors, width=20):
-    for pattern, factor in factors.items():
-        for values in message:
-            if re.fullmatch(pattern, values[0]) is not None:
-                text = values[0]
-                if len(values) > 3:
-                    text = values[3]
-                print_bar(
-                    text, width * values[1] / factor, width * values[2] / factor, total_width=width
-                )
+def print_line(message, descriptors):
+    for pattern, description in descriptors.items():
+        relevant_messages = filter(
+            lambda values: re.fullmatch(pattern, values[0]) is not None, message
+        )
+        for values in relevant_messages:
+            text = values[0]
+            if len(values) > 3:
+                text = values[3]
+            factor = description['width'] / description['factor']
+            print_bar(
+                text, factor * values[1], factor * values[2], total_width=description['width']
+            )
     print('', flush=True)
 
 
-def get_args():
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--url', default='ws://localhost:8888/waterfall', help=' ')
-    parser.add_argument('--width', default=20, help=' ', type=int)
+def parse_column_descriptors(argv, default_width):
+    column_descriptors = {}
+    i = 0
+    while i < len(argv):
+        pattern = argv[i]
+        i += 1
+        column_descriptors[pattern] = {'factor': 100, 'width': default_width}
+        try:
+            value = float(argv[i])
+        except ValueError:
+            pass
+        except IndexError:
+            pass
+        else:
+            column_descriptors[pattern]['factor'] = value
+            i += 1
 
-    parser.add_argument(
-        '--factors',
-        nargs='+',
-        action=ParseKwargs,
-        help='`item=factor` pairs',
-        default={'cpu\\d+': 100, 'memory': 100},
-    )
-    return parser.parse_args()
+        try:
+            value = int(argv[i])
+        except ValueError:
+            pass
+        except IndexError:
+            pass
+        else:
+            column_descriptors[pattern]['width'] = value
+            i += 1
+
+    return column_descriptors
 
 
 def main():
@@ -86,7 +112,7 @@ def main():
             msg = yield connection.read_message()
             if msg is None:
                 break
-            print_line(json.loads(msg), args.factors, width=args.width)
+            print_line(json.loads(msg), args.descriptors)
 
     run()
     tornado.ioloop.IOLoop.current().start()
