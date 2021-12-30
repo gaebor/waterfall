@@ -104,5 +104,40 @@ def zpool():
     return []
 
 
-def all():
-    return list(chain(cpu(), memory(), disk(), net()))
+try:
+    from pynvml.nvml import *
+except ModuleNotFoundError:
+
+    def all():
+        return list(chain(cpu(), memory(), disk(), net()))
+
+
+else:
+
+    def gpu():
+        result = []
+        nvmlInit()
+        num_devices = nvmlDeviceGetCount()
+        if num_devices > 0:
+            padding = int(logarithm(num_devices, 10)) + 1
+        for i in range(num_devices):
+            handle = nvmlDeviceGetHandleByIndex(i)
+            name = nvmlDeviceGetName(handle).decode("ascii")
+            total_memory = nvmlDeviceGetMemoryInfo(handle).total
+            utilization = nvmlDeviceGetUtilizationRates(handle)
+            gpu_percent, memory_percent = utilization.gpu, utilization.memory
+
+            result.append((f'gpu{i:0{padding}d}', gpu_percent, 0, f'{name} ({i})'))
+            result.append(
+                (
+                    f'gpu{i:0{padding}d} memory',
+                    memory_percent,
+                    0,
+                    f'{convert_size_2(memory_percent * total_memory / 100)}B / {convert_size_2(total_memory)}B',
+                )
+            )
+        nvmlShutdown()
+        return result
+
+    def all():
+        return list(chain(cpu(), memory(), disk(), net(), gpu()))
