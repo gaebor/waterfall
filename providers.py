@@ -56,10 +56,8 @@ def time_diff(f):
 
 @time_diff
 def disk():
-    return [
-        (disk_name, disk_io.read_bytes, disk_io.write_bytes)
-        for disk_name, disk_io in psutil.disk_io_counters(perdisk=True).items()
-    ]
+    for disk_name, disk_io in psutil.disk_io_counters(perdisk=True).items():
+        yield (disk_name, disk_io.read_bytes, disk_io.write_bytes)
 
 
 def cpu():
@@ -80,10 +78,8 @@ def cpu():
 
 @time_diff
 def net():
-    return [
-        (nic_name, nic_io.bytes_recv, nic_io.bytes_sent)
-        for nic_name, nic_io in psutil.net_io_counters(pernic=True).items()
-    ]
+    for nic_name, nic_io in psutil.net_io_counters(pernic=True).items():
+        yield (nic_name, nic_io.bytes_recv, nic_io.bytes_sent)
 
 
 def memory():
@@ -115,7 +111,6 @@ except ModuleNotFoundError:
 else:
 
     def gpu():
-        result = []
         nvmlInit()
         num_devices = nvmlDeviceGetCount()
         if num_devices > 0:
@@ -127,17 +122,14 @@ else:
             utilization = nvmlDeviceGetUtilizationRates(handle)
             gpu_percent, memory_percent = utilization.gpu, utilization.memory
 
-            result.append((f'gpu{i:0{padding}d}', gpu_percent, 0, f'{name} ({i})'))
-            result.append(
-                (
-                    f'gpu{i:0{padding}d} memory',
-                    memory_percent,
-                    0,
-                    f'{convert_size_2(memory_percent * total_memory / 100)}B / {convert_size_2(total_memory)}B',
-                )
+            yield (f'gpu{i:0{padding}d}', gpu_percent, 0, f'{name} ({i})')
+            yield (
+                f'gpu{i:0{padding}d} memory',
+                memory_percent,
+                0,
+                f'{convert_size_2(memory_percent * total_memory / 100)}B / {convert_size_2(total_memory)}B',
             )
         nvmlShutdown()
-        return result
 
     def all():
         return list(chain(cpu(), memory(), disk(), net(), gpu()))
