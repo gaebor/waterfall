@@ -15,7 +15,7 @@ def get_args():
     parser.add_argument('--url', help=' ')
     parser.add_argument('--width', default=20, help=' ', type=int)
     parser.add_argument(
-        'descriptors',
+        '--descriptors',
         nargs="*",
         type=str,
         default=['.*', '100', '10'],
