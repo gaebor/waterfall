@@ -29,6 +29,8 @@
   <script type="text/javascript" src="reconnecting-websocket.js"></script>
   <script>
     // function match_name
+    var hosts = [];
+
     window.onload = function () {
       document.body.style.fontSize = "15px";
 
@@ -42,75 +44,79 @@
       if (params.hasOwnProperty("width")) {
         width = params.width;
       }
+    };
 
-      function renderMessage(stats) {
-        result = "";
-        if (Object.keys(params).length == 0) {
-          return JSON.stringify(stats);
-        }
-        for (const key in params) {
-          value = params[key];
-          exact_match = false;
-          if (typeof value === typeof []) {
-            if (value.length > 1 && value[1]) {
-              exact_match = true;
-            }
-            value = value[0];
+    function renderMessage(stats) {
+      return JSON.stringify(stats);
+      result = "";
+      if (Object.keys(params).length == 0) {
+        return JSON.stringify(stats);
+      }
+      for (const key in params) {
+        value = params[key];
+        exact_match = false;
+        if (typeof value === typeof []) {
+          if (value.length > 1 && value[1]) {
+            exact_match = true;
           }
-          for (i = 0; i < stats.length; ++i) {
-            stat_name = stats[i][0];
-            major = stats[i][1];
-            minor = stats[i][2];
-            // if ((exact_match && stat_name == key) || (!exact_match && stat_name.startsWith(key))) {
-            if (stat_name.startsWith(key)) {
-              major = Math.floor(width * Math.max(0, Math.min(major / +(value), 1)));
-              minor = Math.floor(width * Math.max(0, Math.min(minor / +(value), 1)));
-              result += "<span class=major>";
-              for (j = 0; j < major; ++j) {
-                result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
-              }
-              result += "</span><span class=minor>";
-
-              for (; j < minor + major; ++j) {
-                result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
-              }
-              result += "</span>";
-
-              for (; j < width; ++j) {
-                result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
-              }
-              break;
+          value = value[0];
+        }
+        for (i = 0; i < stats.length; ++i) {
+          stat_name = stats[i][0];
+          major = stats[i][1];
+          minor = stats[i][2];
+          // if ((exact_match && stat_name == key) || (!exact_match && stat_name.startsWith(key))) {
+          if (stat_name.startsWith(key)) {
+            major = Math.floor(width * Math.max(0, Math.min(major / +(value), 1)));
+            minor = Math.floor(width * Math.max(0, Math.min(minor / +(value), 1)));
+            result += "<span class=major>";
+            for (j = 0; j < major; ++j) {
+              result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
             }
+            result += "</span><span class=minor>";
+
+            for (; j < minor + major; ++j) {
+              result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
+            }
+            result += "</span>";
+
+            for (; j < width; ++j) {
+              result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
+            }
+            break;
           }
         }
-        return result;
+      }
+      return result;
+    };
+
+    // https://www.redips.net/javascript/adding-table-rows-and-columns
+    function createCell(cell, text) {
+      cell.appendChild(document.createTextNode(text));
+    }
+
+    function add_new_host() {
+      new_host_name = document.getElementById('host_to_monitor').value;
+      new_url = 'ws:\/\/' + new_host_name + ':' + document.getElementById('host_port').value + '/waterfall';
+      new_socket = new ReconnectingWebSocket(new_url);
+      // hosts.push(new_socket);
+      new_socket.onerror = function (error) {
+        document.getElementById('errors').innerHTML = `WebSocket Error from ${new_host_name}: ${error.message}`;
       };
 
-      var socket = new ReconnectingWebSocket('ws://' + location.host + '/websocket');
-      socket.timeoutInterval = 15000;
-
-      socket.onopen = function (event) {
-        document.title = location.host;
-      };
-
-      // Handle any errors that occur.
-      socket.onerror = function (error) {
-        document.getElementById('errors').innerHTML = `WebSocket Error: ${error.message}`;
-      };
-
-      // Handle messages sent by the server.
-      socket.onmessage = function (event) {
-        var messagesHtml = document.getElementById('messages');
+      var tableRef = document.getElementById('monitored_hosts');
+      createCell(tableRef.rows[0].insertCell(hosts.length), new_host_name);
+      createCell(tableRef.rows[1].insertCell(hosts.length), '');
+      var index = hosts.length;
+      new_socket.onmessage = function (event) {
         document.getElementById('errors').innerHTML = "";
+        var messagesHtml = document.getElementById('monitored_hosts').rows[1].cells[index];
         messagesHtml.innerHTML += '<div>' + renderMessage(JSON.parse(event.data)) + '</div>\n';
         while (messagesHtml.children.length > numer_of_lines) {
           messagesHtml.removeChild(messagesHtml.children[0]);
         }
       };
-
-      socket.onclose = function (event) {
-        document.title = '(disconnected)';
-      };
+      hosts.push(new_socket);
     };
   </script>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -119,13 +125,23 @@
 
 <body>
   <div id=errors> </div>
+  <div>
+    Host to monitor: <input type="text" id="host_to_monitor" value="localhost">
+    port: <input type="number" id="host_port" value="8888">
+    <button type="button" onclick="add_new_host()" title="Add">Add</button>
+  </div>
   <div id=w>
     <p id="btn">
       <a href="javascript:void(0)" id="fullbtn">View Fullscreen</a>
       <a href="javascript:void(0)" id="incbtn">increase fontsize</a>
       <a href="javascript:void(0)" id="decbtn">decrease fontsize</a>
     </p>
-    <div id="messages" class="onlyfull"></div>
+    <div id="messages" class="onlyfull">
+      <table id='monitored_hosts'>
+        <tr></tr>
+        <tr></tr>
+      </table>
+    </div>
   </div>
   <script type="text/javascript">
     //View Fullscreen
