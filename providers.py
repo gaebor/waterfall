@@ -57,7 +57,7 @@ def time_diff(f):
 @time_diff
 def disk():
     for disk_name, disk_io in psutil.disk_io_counters(perdisk=True).items():
-        yield (disk_name, disk_io.read_bytes, disk_io.write_bytes)
+        yield (disk_name, disk_io.read_bytes / 1250000, disk_io.write_bytes / 1250000)
 
 
 def cpu():
@@ -89,7 +89,7 @@ def cpu():
 @time_diff
 def net():
     for nic_name, nic_io in psutil.net_io_counters(pernic=True).items():
-        yield (nic_name, nic_io.bytes_recv, nic_io.bytes_sent)
+        yield (nic_name, nic_io.bytes_recv / 1250000, nic_io.bytes_sent / 1250000)
 
 
 def memory():
