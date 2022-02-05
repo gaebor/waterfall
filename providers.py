@@ -62,17 +62,27 @@ def disk():
 
 def cpu():
     cpu_times = psutil.cpu_times_percent(percpu=True)
+    frequencies = psutil.cpu_freq(percpu=True)
+
     padding = int(logarithm(len(cpu_times), 10)) + 1
 
-    frequencies = psutil.cpu_freq(percpu=True)
-    if len(frequencies) == 1:
-        frequencies = frequencies * len(cpu_times)
-
     cpu_infos = [
-        (f'cpu{i:0{padding}d}', cpu_time.user, cpu_time.system, str(cpu_freq.current) + 'MHz')
-        for i, (cpu_time, cpu_freq) in enumerate(zip(cpu_times, frequencies))
+        (f'cpu{i:0{padding}d}', cpu_time.user, cpu_time.system)
+        for i, cpu_time in enumerate(cpu_times)
     ]
-    cpu_infos.append(('cpu', sum(x[1] for x in cpu_infos), sum(x[2] for x in cpu_infos)))
+    cpu_infos.append(
+        (
+            'cpu',
+            sum(x[1] for x in cpu_infos) / len(cpu_infos),
+            sum(x[2] for x in cpu_infos) / len(cpu_infos),
+        )
+    )
+
+    if len(frequencies) == 1:
+        cpu_infos[-1] += (str(frequencies[0].current) + 'MHz',)
+    elif len(frequencies) == len(cpu_infos) - 1:
+        for i in range(len(frequencies)):
+            cpu_infos[i] += (str(frequencies[i].current) + 'MHz',)
     return cpu_infos
 
 
