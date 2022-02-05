@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="hu">
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width" />
-  <title>(not connected)</title>
+  <title>waterfall</title>
   <style>
     body {
       font-family: 'Courier New', monospace;
@@ -23,20 +23,24 @@
     #btn {
       display: block;
     }
+
+    td {
+      vertical-align: top;
+    }
   </style>
-  <script type="text/javascript" src="URI.js"></script>
+  <script src="URI.js"></script>
   <!-- https://github.com/joewalnes/reconnecting-websocket -->
-  <script type="text/javascript" src="reconnecting-websocket.js"></script>
+  <script src="reconnecting-websocket.js"></script>
   <script>
     // function match_name
     var hosts = [];
+    var numer_of_lines = 40;
+    var width = 20;
 
     window.onload = function () {
       document.body.style.fontSize = "15px";
 
       const params = new URI(window.location).search(true);
-      var numer_of_lines = 40;
-      var width = 20;
 
       if (params.hasOwnProperty("line")) {
         numer_of_lines = params.line;
@@ -46,44 +50,36 @@
       }
     };
 
-    function renderMessage(stats) {
-      return JSON.stringify(stats);
-      result = "";
-      if (Object.keys(params).length == 0) {
+    function renderMessage(stats, patterns) {
+      if (patterns.length == 0) {
         return JSON.stringify(stats);
       }
-      for (const key in params) {
-        value = params[key];
-        exact_match = false;
-        if (typeof value === typeof []) {
-          if (value.length > 1 && value[1]) {
-            exact_match = true;
-          }
-          value = value[0];
-        }
-        for (i = 0; i < stats.length; ++i) {
-          stat_name = stats[i][0];
-          major = stats[i][1];
-          minor = stats[i][2];
-          // if ((exact_match && stat_name == key) || (!exact_match && stat_name.startsWith(key))) {
-          if (stat_name.startsWith(key)) {
-            major = Math.floor(width * Math.max(0, Math.min(major / +(value), 1)));
-            minor = Math.floor(width * Math.max(0, Math.min(minor / +(value), 1)));
+      result = "";
+      for (const pattern of patterns) {
+        for (const stat of stats) {
+          if (stat[0].match(pattern)) {
+            text = stat[0];
+            major = stat[1];
+            minor = stat[2];
+            if (stat.length > 3) {
+              text = stat[3];
+            }
+            major = Math.floor(width * Math.max(0, Math.min(major / 100, 1)));
+            minor = Math.floor(width * Math.max(0, Math.min(minor / 100, 1)));
             result += "<span class=major>";
             for (j = 0; j < major; ++j) {
-              result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
+              result += (j < text.length ? text[j] : "&nbsp;");
             }
             result += "</span><span class=minor>";
 
             for (; j < minor + major; ++j) {
-              result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
+              result += (j < text.length ? text[j] : "&nbsp;");
             }
             result += "</span>";
 
             for (; j < width; ++j) {
-              result += (j < stat_name.length ? stat_name[j] : "&nbsp;");
+              result += (j < text.length ? text[j] : "&nbsp;");
             }
-            break;
           }
         }
       }
@@ -98,6 +94,7 @@
     function add_new_host() {
       new_host_name = document.getElementById('host_to_monitor').value;
       new_url = 'ws:\/\/' + new_host_name + ':' + document.getElementById('host_port').value + '/waterfall';
+      var providers = document.getElementById('providers').value.split(",").filter((s) => s.length > 0).map((element) => new RegExp(element));
       new_socket = new ReconnectingWebSocket(new_url);
       // hosts.push(new_socket);
       new_socket.onerror = function (error) {
@@ -111,16 +108,16 @@
       new_socket.onmessage = function (event) {
         document.getElementById('errors').innerHTML = "";
         var messagesHtml = document.getElementById('monitored_hosts').rows[1].cells[index];
-        messagesHtml.innerHTML += '<div>' + renderMessage(JSON.parse(event.data)) + '</div>\n';
+        messagesHtml.innerHTML += '<div>' + renderMessage(JSON.parse(event.data), providers) + '</div>\n';
         while (messagesHtml.children.length > numer_of_lines) {
-          messagesHtml.removeChild(messagesHtml.children[0]);
+          messagesHtml.getElementsByTagName("div")[0].remove();
         }
       };
       hosts.push(new_socket);
     };
   </script>
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script type="text/javascript" src="jquery.fullscreen.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src="jquery.fullscreen.js"></script>
 </head>
 
 <body>
@@ -128,6 +125,7 @@
   <div>
     Host to monitor: <input type="text" id="host_to_monitor" value="localhost">
     port: <input type="number" id="host_port" value="8888">
+    providers: <input type="text" id="providers" value="cpu,memory">
     <button type="button" onclick="add_new_host()" title="Add">Add</button>
   </div>
   <div id=w>
@@ -143,7 +141,7 @@
       </table>
     </div>
   </div>
-  <script type="text/javascript">
+  <script>
     //View Fullscreen
     $(function () {
       $('#fullbtn').click(function () {
