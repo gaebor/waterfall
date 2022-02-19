@@ -1,6 +1,7 @@
 from functools import partial
 import argparse
 from sys import stderr
+from os.path import dirname
 
 import tornado.escape
 import tornado.ioloop
@@ -18,6 +19,14 @@ def get_args():
     parser.add_argument('--width', default=20, help=' ', type=int)
     parser.add_argument('--refresh', default=2000, help='milliseconds', type=int)
     parser.add_argument(
+        '--html',
+        '--http',
+        dest='html',
+        default=False,
+        help='hosts a static webpage as well',
+        action='store_true',
+    )
+    parser.add_argument(
         '--descriptors',
         nargs="*",
         type=str,
@@ -30,8 +39,16 @@ def get_args():
 
 
 class Application(tornado.web.Application):
-    def __init__(self):
+    def __init__(self, enable_html):
         handlers = [(r"/waterfall", StatsServer)]
+        if enable_html:
+            handlers.append(
+                (
+                    r"/(.*)",
+                    tornado.web.StaticFileHandler,
+                    {'path': dirname(__file__), 'default_filename': "index.html"},
+                )
+            )
         super().__init__(handlers)
 
 
@@ -79,7 +96,7 @@ class TimedFunction:
 def main():
     args = get_args()
 
-    app = Application()
+    app = Application(args.html)
     app.listen(args.port)
     loop = tornado.ioloop.IOLoop.current()
     timer = TimedFunction()
