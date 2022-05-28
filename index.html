@@ -37,6 +37,37 @@
     var numer_of_lines = 40;
     var width = 20;
 
+    function add_new_host(new_host_name, host_port, providers) {
+      new_url = 'ws:\/\/' + new_host_name + ':' + host_port + '/waterfall';
+      var providers = providers.split(",").filter((s) => s.length > 0).map((element) => new RegExp(element));
+      new_socket = new ReconnectingWebSocket(new_url);
+      // hosts.push(new_socket);
+      new_socket.onerror = function (error) {
+        document.getElementById('errors').innerHTML = `WebSocket Error from ${new_host_name}: ${error.message}`;
+      };
+
+      var tableRef = document.getElementById('monitored_hosts');
+      createCell(tableRef.rows[0].insertCell(hosts.length), new_host_name);
+      createCell(tableRef.rows[1].insertCell(hosts.length), '');
+      var index = hosts.length;
+      new_socket.onmessage = function (event) {
+        document.getElementById('errors').innerHTML = "";
+        var messagesHtml = document.getElementById('monitored_hosts').rows[1].cells[index];
+        messagesHtml.innerHTML += '<div>' + renderMessage(JSON.parse(event.data), providers) + '</div>\n';
+        while (messagesHtml.children.length > numer_of_lines) {
+          messagesHtml.getElementsByTagName("div")[0].remove();
+        }
+      };
+      hosts.push(new_socket);
+    };
+
+    function add_new_host_btn() {
+      host_name = document.getElementById('host_to_monitor').value
+      host_port = document.getElementById('host_port').value
+      providers = document.getElementById('providers').value
+      window.location.search += '&watch=' + host_name + '%20' + host_port + '%20' + providers
+    };
+
     window.onload = function () {
       document.body.style.fontSize = "15px";
 
@@ -47,6 +78,19 @@
       }
       if (params.hasOwnProperty("width")) {
         width = params.width;
+      }
+      var what_to_watch = []
+      if (params.hasOwnProperty("watch")) {
+        if (typeof params.watch == "string") {
+          what_to_watch = [params.watch]
+        }
+        else {
+          what_to_watch = params.watch
+        }
+      }
+      for (const watch of what_to_watch) {
+        parameters = watch.split(' ')
+        add_new_host(parameters[0], parameters[1], parameters[2])
       }
     };
 
@@ -91,30 +135,6 @@
       cell.appendChild(document.createTextNode(text));
     }
 
-    function add_new_host() {
-      new_host_name = document.getElementById('host_to_monitor').value;
-      new_url = 'ws:\/\/' + new_host_name + ':' + document.getElementById('host_port').value + '/waterfall';
-      var providers = document.getElementById('providers').value.split(",").filter((s) => s.length > 0).map((element) => new RegExp(element));
-      new_socket = new ReconnectingWebSocket(new_url);
-      // hosts.push(new_socket);
-      new_socket.onerror = function (error) {
-        document.getElementById('errors').innerHTML = `WebSocket Error from ${new_host_name}: ${error.message}`;
-      };
-
-      var tableRef = document.getElementById('monitored_hosts');
-      createCell(tableRef.rows[0].insertCell(hosts.length), new_host_name);
-      createCell(tableRef.rows[1].insertCell(hosts.length), '');
-      var index = hosts.length;
-      new_socket.onmessage = function (event) {
-        document.getElementById('errors').innerHTML = "";
-        var messagesHtml = document.getElementById('monitored_hosts').rows[1].cells[index];
-        messagesHtml.innerHTML += '<div>' + renderMessage(JSON.parse(event.data), providers) + '</div>\n';
-        while (messagesHtml.children.length > numer_of_lines) {
-          messagesHtml.getElementsByTagName("div")[0].remove();
-        }
-      };
-      hosts.push(new_socket);
-    };
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script src="jquery.fullscreen.js"></script>
@@ -126,7 +146,7 @@
     Host to monitor: <input type="text" id="host_to_monitor" value="localhost">
     port: <input type="number" id="host_port" value="8888">
     providers: <input type="text" id="providers" value="cpu,memory">
-    <button type="button" onclick="add_new_host()" title="Add">Add</button>
+    <button type="button" onclick="add_new_host_btn()" title="Add">Add</button>
   </div>
   <div id=w>
     <p id="btn">
