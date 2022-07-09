@@ -68,11 +68,29 @@
       window.location.search += '&watch=' + host_name + '%20' + host_port + '%20' + providers
     };
 
-    window.onload = function () {
-      document.body.style.fontSize = "15px";
+    function incbtn() {
+      current_size = Number(document.body.style.fontSize.slice(0, -2));
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('fontsize', current_size + 1);
+      window.location.search = urlParams;
+    }
 
+    function decbtn() {
+      current_size = Number(document.body.style.fontSize.slice(0, -2));
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('fontsize', current_size - 1);
+      window.location.search = urlParams;
+    }
+
+    window.onload = function () {
       const params = new URI(window.location).search(true);
 
+      if (params.hasOwnProperty("fontsize")) {
+        document.body.style.fontSize = params.fontsize + "px";
+      }
+      else {
+        document.body.style.fontSize = "15px";
+      }
       if (params.hasOwnProperty("line")) {
         numer_of_lines = params.line;
       }
@@ -143,16 +161,16 @@
 <body>
   <div id=errors> </div>
   <div>
-    Host to monitor: <input type="text" id="host_to_monitor" value="localhost">
-    port: <input type="number" id="host_port" value="8888">
-    providers: <input type="text" id="providers" value="cpu,memory">
+    Host to monitor: <input type="text" id="host_to_monitor" value="localhost" title="host">
+    port: <input type="number" id="host_port" value="8888" title="port">
+    providers: <input type="text" id="providers" value="cpu,memory" title="providers">
     <button type="button" onclick="add_new_host_btn()" title="Add">Add</button>
   </div>
   <div id=w>
     <p id="btn">
       <a href="javascript:void(0)" id="fullbtn">View Fullscreen</a>
-      <a href="javascript:void(0)" id="incbtn">increase fontsize</a>
-      <a href="javascript:void(0)" id="decbtn">decrease fontsize</a>
+      <button type="button" onclick="incbtn()" title="increase">increase fontsize</button>
+      <button type="button" onclick="decbtn()" title="decrease">decrease fontsize</button>
     </p>
     <div id="messages" class="onlyfull">
       <table id='monitored_hosts'>
@@ -176,17 +194,6 @@
         });
         return false;
       });
-      $('#incbtn').click(function () {
-        current = document.body.style.fontSize;
-        current_size = Number(current.slice(0, -2));
-        document.body.style.fontSize = (current_size + 1) + "px";
-      });
-      $('#decbtn').click(function () {
-        current = document.body.style.fontSize;
-        current_size = Number(current.slice(0, -2));
-        document.body.style.fontSize = (current_size - 1) + "px";
-      });
-
     });
 
   </script>
