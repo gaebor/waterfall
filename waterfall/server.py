@@ -1,4 +1,3 @@
-from functools import partial
 import argparse
 from sys import stderr
 from os.path import dirname
@@ -9,8 +8,7 @@ import tornado.options
 import tornado.web
 import tornado.websocket
 
-import providers
-from waterfall import parse_column_descriptors, print_line
+from waterfall.providers import all as all_providers
 
 
 def get_args():
@@ -26,15 +24,7 @@ def get_args():
         help='hosts a static webpage as well',
         action='store_true',
     )
-    parser.add_argument(
-        '--descriptors',
-        nargs="*",
-        type=str,
-        default=['.*', '100', '10'],
-        help='pattern [factor [width]] [pattern [factor [width]]] ... where `pattern` is a regex, `factor` is an float and `width` is an integer',
-    )
     args = parser.parse_args()
-    args.descriptors = parse_column_descriptors(args.descriptors, args.width)
     return args
 
 
@@ -85,12 +75,11 @@ class TimedFunction:
         self.update_stats()
 
     def update_stats(self):
-        return providers.all()
+        return all_providers()
 
-    def run(self, descriptors):
+    def run(self):
         payload = self.update_stats()
         StatsServer.send_updates(tornado.escape.json_encode(payload))
-        print_line(payload, descriptors)
 
 
 def main():
@@ -100,9 +89,7 @@ def main():
     app.listen(args.port)
     loop = tornado.ioloop.IOLoop.current()
     timer = TimedFunction()
-    tornado.ioloop.PeriodicCallback(
-        partial(timer.run, descriptors=args.descriptors), args.refresh
-    ).start()
+    tornado.ioloop.PeriodicCallback(timer.run, args.refresh).start()
     loop.start()
 
 
