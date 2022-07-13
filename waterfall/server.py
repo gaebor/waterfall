@@ -14,7 +14,6 @@ from waterfall.providers import all as all_providers
 def get_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--port', default=8888, help=' ', type=int)
-    parser.add_argument('--width', default=20, help=' ', type=int)
     parser.add_argument('--refresh', default=2000, help='milliseconds', type=int)
     parser.add_argument(
         '--html',
