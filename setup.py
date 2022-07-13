@@ -1,12 +1,23 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 from setuptools.command.install import install
+from re import match
 
 
 class RegisterCrontab(install):
     def run(self):
         install.run(self)
-        print(self.distribution.script_args)
+        name = self.distribution.get_name()
+        arguments = self.distribution.script_args
+        is_webserver_startup = list(
+            filter(bool, [match('\w+[webserver_startup]', argument) for argument in arguments])
+        )
+        if is_webserver_startup:
+            from crontab import CronTab
+            from sys import executable
+
+            with CronTab(tab=f'@reboot "{executable}" -m waterfall.server'):
+                pass
 
 
 setup(
