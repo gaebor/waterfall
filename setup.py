@@ -16,8 +16,9 @@ class RegisterCrontab(install):
             from crontab import CronTab
             from sys import executable
 
-            with CronTab(tab=f'@reboot "{executable}" -m waterfall.server'):
-                pass
+            with CronTab(user=True) as cron:
+                job = cron.new(command=f'"{executable}" -m waterfall.server')
+                job.every_reboot()
 
 
 setup(
