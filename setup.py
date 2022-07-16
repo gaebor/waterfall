@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 from setuptools.command.install import install
-from re import match
+from re import search
+from sys import executable
 
 
 class RegisterCrontab(install):
@@ -10,11 +11,10 @@ class RegisterCrontab(install):
         name = self.distribution.get_name()
         arguments = self.distribution.script_args
         is_webserver_startup = list(
-            filter(bool, [match('\w+[webserver_startup]', argument) for argument in arguments])
+            filter(bool, (search('\[webserver_startup\]$', argument) for argument in arguments))
         )
         if is_webserver_startup:
             from crontab import CronTab
-            from sys import executable
 
             with CronTab(user=True) as cron:
                 job = cron.new(command=f'"{executable}" -m waterfall.server')
