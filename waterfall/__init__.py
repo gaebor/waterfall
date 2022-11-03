@@ -1,4 +1,4 @@
-from re import fullmatch
+from re import search
 from termcolor import colored
 
 
@@ -35,45 +35,68 @@ def parse_column_descriptors(argv, default_width):
 def print_line(message, descriptors):
     printed = False
     for pattern, description in descriptors.items():
-        relevant_messages = filter(
-            lambda values: fullmatch(pattern, values[0]) is not None, message
-        )
+        relevant_messages = filter(lambda values: search(pattern, values[0]) is not None, message)
         for values in relevant_messages:
             printed = True
             text = values[0]
             if len(values) > 3:
                 text = values[3]
             factor = description['width'] / description['factor']
-            print_bar(
-                text, factor * values[1], factor * values[2], total_width=description['width']
+            print(
+                render_bars(
+                    text,
+                    int(round(factor * values[1])),
+                    int(round(factor * values[2])),
+                    width=description['width'],
+                    additive=values[4] if len(values) > 4 else True,
+                ),
+                end='',
             )
     if printed:
         print('', flush=True)
 
 
-def print_bar(text, highlight1_width, highlight2_width=0, total_width=80):
-    total_width = int(max(0, total_width))
-    highlight1_width = int(min(highlight1_width, total_width))
-    highlight2_width = int(min(highlight2_width, total_width - highlight1_width))
-    part1 = (
-        colored(text_cap(text, highlight1_width), attrs=['reverse'])
-        if highlight1_width > 0
-        else ''
-    )
-    part2 = (
-        colored(
-            text_cap(text[highlight1_width:], highlight2_width),
-            on_color='on_red',
-        )
-        if highlight2_width > 0
-        else ''
-    )
-    part3 = text_cap(
-        text[highlight1_width + highlight2_width :],
-        total_width - (highlight1_width + highlight2_width),
-    )
+def render_bars(
+    text: str,
+    highlight1_width: int,
+    highlight2_width: int = 0,
+    width: int = 80,
+    additive: bool = True,
+):
+    if additive:
+        attributes = [
+            (highlight1_width, {'attrs': ['reverse']}),
+            (highlight2_width, {'on_color': 'on_red'}),
+        ]
+    else:
+        first_width = min(highlight1_width, highlight2_width)
+        second_width = max(highlight1_width, highlight2_width)
+        attributes = [
+            (first_width, {'on_color': 'on_magenta'}),
+            (
+                second_width,
+                (
+                    {'on_color': 'on_red'}
+                    if highlight2_width > highlight1_width
+                    else {'attrs': ['reverse']}
+                ),
+            ),
+        ]
+    return render_with_colors(text, attributes, width)
 
-    print(part1 + part2 + part3, end='')
+
+def render_with_colors(text: str, attributes, width: int):
+    text = text_cap(text, width)
+    result = ''
+    printed = 0
+    for length, attribute in attributes:
+        if length > 0:
+            result += colored(text[printed : printed + length], **attribute)
+        printed += length
+        if printed > width:
+            break
+    result += text[printed:]
+    return result
 
 
 def text_cap(s, width):
