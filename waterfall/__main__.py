@@ -27,8 +27,9 @@ def get_args():
         '--descriptors',
         nargs="*",
         type=str,
-        default=['.*', '100', '10'],
-        help='pattern [factor [width]] [pattern [factor [width]]] ... where `pattern` is a regex, `factor` is an float and `width` is an integer',
+        default=['.*'],
+        help='pattern [factor [width]] [pattern [factor [width]]] ... where `pattern` is a regex, '
+        '`factor` is an float and `width` is an integer',
     )
     args = parser.parse_args()
     args.descriptors = parse_column_descriptors(args.descriptors, args.width)
