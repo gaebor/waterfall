@@ -20,6 +20,10 @@
       background-color: red;
     }
 
+    span.common {
+      background-color: purple;
+    }
+
     #btn {
       display: block;
     }
@@ -127,19 +131,32 @@
             if (stat.alternative_display !== null) {
               text = stat.alternative_display;
             }
-            major = Math.floor(width * Math.max(0, Math.min(major / stat.theoretical_maximum, 1)));
-            minor = Math.floor(width * Math.max(0, Math.min(minor / stat.theoretical_maximum, 1)));
-            result += "<span class=major>";
-            for (j = 0; j < major; ++j) {
-              result += (j < text.length ? text[j] : "&nbsp;");
-            }
-            result += "</span><span class=minor>";
+            major = Math.round(width * Math.max(0, Math.min(major / stat.theoretical_maximum, 1)));
+            minor = Math.round(width * Math.max(0, Math.min(minor / stat.theoretical_maximum, 1)));
+            j = 0;
+            if (stat.additive) {
+              result += "<span class=major>";
+              for (; j < major; ++j) {
+                result += (j < text.length ? text[j] : "&nbsp;");
+              }
+              result += "</span><span class=minor>";
 
-            for (; j < minor + major; ++j) {
-              result += (j < text.length ? text[j] : "&nbsp;");
+              for (; j < minor + major; ++j) {
+                result += (j < text.length ? text[j] : "&nbsp;");
+              }
+              result += "</span>";
+            } else {
+              result += "<span class=common>";
+              for (; j < Math.min(major, minor); ++j) {
+                result += (j < text.length ? text[j] : "&nbsp;");
+              }
+              result += "</span>"
+              result += ((major > minor) ? "<span class=major>" : "<span class=minor>")
+              for (; j < Math.max(major, minor); ++j) {
+                result += (j < text.length ? text[j] : "&nbsp;");
+              }
+              result += "</span>"
             }
-            result += "</span>";
-
             for (; j < width; ++j) {
               result += (j < text.length ? text[j] : "&nbsp;");
             }
