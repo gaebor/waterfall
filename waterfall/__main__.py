@@ -6,14 +6,22 @@ from waterfall import providers, parse_column_descriptors, print_line
 
 def main():
     args = get_args()
-    while True:
+    counter = 0
+    while counter < args.n or args.n == 0:
         print_line(providers.all(), args.descriptors)
         sleep(args.refresh)
+        counter += 1
 
 
 def get_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('--width', default=20, help=' ', type=int)
+    parser.add_argument(
+        '-n',
+        default=0,
+        type=int,
+        help='specifies the number of iterations to take. ' 'If 0 then runs in an infinite loop',
+    )
     parser.add_argument('--refresh', default=2, help='seconds', type=int)
     parser.add_argument(
         '--descriptors',
