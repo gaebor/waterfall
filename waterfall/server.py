@@ -41,17 +41,21 @@ class Application(tornado.web.Application):
         super().__init__(handlers)
 
 
+# pylint: disable=abstract-method
 class StatsServer(tornado.websocket.WebSocketHandler):
     waiters = set()
 
     def check_origin(self, origin):
         return True
 
+    def on_message(self, message):
+        pass
+
     def get_compression_options(self):
         # Non-None enables compression with default options.
         return {}
 
-    def open(self):
+    def open(self, *args: str, **kwargs: str):
         StatsServer.waiters.add(self)
 
     def on_close(self):
