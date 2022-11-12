@@ -137,43 +137,52 @@ def memory():
     ]
 
 
+def gpu():
+    nvmlInit()
+    num_devices = nvmlDeviceGetCount()
+    if num_devices > 0:
+        padding = int(logarithm(num_devices, 10)) + 1
+    for i in range(num_devices):
+        handle = nvmlDeviceGetHandleByIndex(i)
+        name = nvmlDeviceGetName(handle).decode("ascii")
+        total_memory = nvmlDeviceGetMemoryInfo(handle).total
+        utilization = nvmlDeviceGetUtilizationRates(handle)
+        gpu_percent, memory_percent = utilization.gpu, utilization.memory
+
+        yield Metric(
+            f'gpu{i:0{padding}d}',
+            gpu_percent,
+            theoretical_maximum=100,
+            alternative_display=f'{name} ({i})',
+        )
+        yield Metric(
+            f'gpu{i:0{padding}d} memory',
+            memory_percent,
+            theoretical_maximum=100,
+            alternative_display=(
+                f'{convert_size_2(memory_percent * total_memory / 100)}B'
+                f' / {convert_size_2(total_memory)}B'
+            ),
+        )
+    nvmlShutdown()
+
+
 try:
-    from pynvml.nvml import *
+    from pynvml.nvml import (
+        nvmlInit,
+        nvmlDeviceGetCount,
+        nvmlDeviceGetHandleByIndex,
+        nvmlDeviceGetName,
+        nvmlDeviceGetMemoryInfo,
+        nvmlDeviceGetUtilizationRates,
+        nvmlShutdown,
+    )
 except ModuleNotFoundError:
 
-    def all():
+    def every():
         return list(chain(cpu(), memory(), disk(), net()))
 
 else:
 
-    def gpu():
-        nvmlInit()
-        num_devices = nvmlDeviceGetCount()
-        if num_devices > 0:
-            padding = int(logarithm(num_devices, 10)) + 1
-        for i in range(num_devices):
-            handle = nvmlDeviceGetHandleByIndex(i)
-            name = nvmlDeviceGetName(handle).decode("ascii")
-            total_memory = nvmlDeviceGetMemoryInfo(handle).total
-            utilization = nvmlDeviceGetUtilizationRates(handle)
-            gpu_percent, memory_percent = utilization.gpu, utilization.memory
-
-            yield Metric(
-                f'gpu{i:0{padding}d}',
-                gpu_percent,
-                theoretical_maximum=100,
-                alternative_display=f'{name} ({i})',
-            )
-            yield Metric(
-                f'gpu{i:0{padding}d} memory',
-                memory_percent,
-                theoretical_maximum=100,
-                alternative_display=(
-                    f'{convert_size_2(memory_percent * total_memory / 100)}B'
-                    f' / {convert_size_2(total_memory)}B'
-                ),
-            )
-        nvmlShutdown()
-
-    def all():
+    def every():
         return list(chain(cpu(), memory(), disk(), net(), gpu()))

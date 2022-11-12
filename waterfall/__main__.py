@@ -8,7 +8,7 @@ def main():
     args = get_args()
     counter = 0
     while counter < args.n or args.n == 0:
-        print_line(providers.all(), args.descriptors)
+        print_line(providers.every(), args.descriptors)
         sleep(args.refresh)
         counter += 1
 
