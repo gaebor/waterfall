@@ -15,3 +15,6 @@ python -m waterfall.server -h
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 python -m waterfall.client -h
 IF %ERRORLEVEL% NEQ 0 (exit 1)
+
+start "waterfall server" python -m waterfall.server
+python -m waterfall.client
