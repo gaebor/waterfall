@@ -16,7 +16,10 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - run: bash test_code.cmd
+    - name: Install
+      run: python -m pip install .[webserver]
+    - name: Test
+      run: bash test_code.cmd
   ubuntu20:
     runs-on: ubuntu-20.04
     steps:
@@ -24,7 +27,10 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - run: bash test_code.cmd
+    - name: Install
+      run: python -m pip install .[webserver]
+    - name: Test
+      run: bash test_code.cmd
   ubuntu22:
     runs-on: ubuntu-22.04
     steps:
@@ -32,21 +38,36 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.10
-    - run: bash test_code.cmd
+    - name: Install
+      run: python -m pip install .[webserver]
+    - name: Test
+      run: bash test_code.cmd
   windows2019:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
-    - run: test_code.cmd
+    - name: Install
+      run: python -m pip install .[webserver]
+    - name: Test
+      run: test_code.cmd
   windows2022:
     runs-on: windows-2022
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
-    - run: test_code.cmd
+    - name: Install
+      run: python -m pip install .[webserver]
+    - name: Test
+      run: test_code.cmd
   macos:
     runs-on: macos-11
     steps:
     - uses: actions/checkout@v2
-    - run: bash test_code.cmd
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+    - name: Install
+      run: python -m pip install .[webserver]
+    - name: Test
+      run: bash test_code.cmd
