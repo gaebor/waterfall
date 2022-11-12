@@ -29,10 +29,10 @@ def convert_size_10(size):
 class Metric:
     name: str
     primary_resource: float
+    theoretical_maximum: float
     secondary_resource: float = 0.0
     alternative_display: str = None
     additive: bool = True
-    theoretical_maximum_hint: float = 0.0
 
 
 class time_diff:
@@ -71,9 +71,9 @@ def disk():
         yield Metric(
             disk_name,
             disk_io.read_bytes,
-            disk_io.write_bytes,
+            theoretical_maximum=125000000,
+            secondary_resource=disk_io.write_bytes,
             additive=False,
-            theoretical_maximum_hint=125000000,
         )
 
 
@@ -84,15 +84,20 @@ def cpu():
     padding = int(logarithm(len(cpu_times), 10)) + 1
 
     cpu_infos = [
-        Metric(f'cpu{i:0{padding}d}', cpu_time.user, cpu_time.system, theoretical_maximum_hint=100)
+        Metric(
+            f'cpu{i:0{padding}d}',
+            cpu_time.user,
+            theoretical_maximum=100,
+            secondary_resource=cpu_time.system,
+        )
         for i, cpu_time in enumerate(cpu_times)
     ]
     cpu_infos.append(
         Metric(
             'cpu',
             sum(x.primary_resource for x in cpu_infos),
-            sum(x.secondary_resource for x in cpu_infos),
-            theoretical_maximum_hint=len(cpu_infos) * 100,
+            theoretical_maximum=len(cpu_infos) * 100,
+            secondary_resource=sum(x.secondary_resource for x in cpu_infos),
         )
     )
 
@@ -110,9 +115,9 @@ def net():
         yield Metric(
             nic_name,
             nic_io.bytes_recv,
-            nic_io.bytes_sent,
+            theoretical_maximum=125000000,
+            secondary_resource=nic_io.bytes_sent,
             additive=False,
-            theoretical_maximum_hint=125000000,
         )
 
 
@@ -123,11 +128,11 @@ def memory():
         Metric(
             'memory',
             mem_usage.percent,
+            theoretical_maximum=100,
             alternative_display=(
                 f'{convert_size_2(mem_usage.percent * total / 100)}B'
                 f' / {convert_size_2(total)}B'
             ),
-            theoretical_maximum_hint=100,
         )
     ]
 
@@ -156,13 +161,13 @@ else:
             yield Metric(
                 f'gpu{i:0{padding}d}',
                 gpu_percent,
+                theoretical_maximum=100,
                 alternative_display=f'{name} ({i})',
-                theoretical_maximum_hint=100,
             )
             yield Metric(
                 f'gpu{i:0{padding}d} memory',
                 memory_percent,
-                theoretical_maximum_hint=100,
+                theoretical_maximum=100,
                 alternative_display=(
                     f'{convert_size_2(memory_percent * total_memory / 100)}B'
                     f' / {convert_size_2(total_memory)}B'

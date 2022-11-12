@@ -1,14 +1,25 @@
+from typing import List, Dict, Iterable
 from re import search
 from termcolor import colored
+from dataclasses import dataclass
+
+from waterfall.providers import Metric
 
 
-def parse_column_descriptors(argv, default_width):
+@dataclass
+class Descriptor:
+    pattern: str
+    width: int
+    factor: int = None
+
+
+def parse_column_descriptors(argv, default_width) -> Dict[str, Descriptor]:
     column_descriptors = {}
     i = 0
     while i < len(argv):
         pattern = argv[i]
         i += 1
-        column_descriptors[pattern] = {'factor': 100, 'width': default_width}
+        column_descriptors[pattern] = Descriptor(pattern, default_width)
         try:
             value = float(argv[i])
         except ValueError:
@@ -16,7 +27,7 @@ def parse_column_descriptors(argv, default_width):
         except IndexError:
             pass
         else:
-            column_descriptors[pattern]['factor'] = value
+            column_descriptors[pattern].factor = value
             i += 1
 
         try:
@@ -26,29 +37,33 @@ def parse_column_descriptors(argv, default_width):
         except IndexError:
             pass
         else:
-            column_descriptors[pattern]['width'] = value
+            column_descriptors[pattern].width = value
             i += 1
 
-    return column_descriptors
+    return list(column_descriptors.values())
 
 
-def print_line(message, descriptors):
+def print_line(messages: List[Metric], descriptors: Iterable[Descriptor]):
     printed = False
-    for pattern, description in descriptors.items():
-        relevant_messages = filter(lambda values: search(pattern, values[0]) is not None, message)
-        for values in relevant_messages:
+    for descriptor in descriptors:
+        relevant_messages = [
+            metric for metric in messages if search(descriptor.pattern, metric.name)
+        ]
+        for metric in relevant_messages:
             printed = True
-            text = values[0]
-            if len(values) > 3:
-                text = values[3]
-            factor = description['width'] / description['factor']
+            text = (
+                metric.name if metric.alternative_display is None else metric.alternative_display
+            )
+            factor = descriptor.width / (
+                descriptor.factor if descriptor.factor else metric.theoretical_maximum
+            )
             print(
                 render_bars(
                     text,
-                    int(round(factor * values[1])),
-                    int(round(factor * values[2])),
-                    width=description['width'],
-                    additive=values[4] if len(values) > 4 else True,
+                    int(round(factor * metric.primary_resource)),
+                    int(round(factor * metric.secondary_resource)),
+                    width=descriptor.width,
+                    additive=metric.additive,
                 ),
                 end='',
             )
