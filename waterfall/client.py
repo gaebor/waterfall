@@ -6,6 +6,7 @@ import tornado.gen
 from tornado.websocket import websocket_connect
 
 from waterfall import print_line, parse_column_descriptors, add_descriptor_arguments
+from waterfall.providers import Metric
 
 
 def get_args():
@@ -33,7 +34,7 @@ def main():
             msg = yield connection.read_message()
             if msg is None:
                 break
-            print_line(json.loads(msg), args.descriptors)
+            print_line([Metric(**message) for message in json.loads(msg)], args.descriptors)
 
     run()
     tornado.ioloop.IOLoop.current().start()

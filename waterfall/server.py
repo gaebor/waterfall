@@ -82,7 +82,9 @@ class TimedFunction:
 
     def run(self):
         payload = self.update_stats()
-        StatsServer.send_updates(tornado.escape.json_encode(payload))
+        StatsServer.send_updates(
+            tornado.escape.json_encode([metric.__dict__ for metric in payload])
+        )
 
 
 def main():
