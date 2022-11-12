@@ -27,6 +27,7 @@
     td {
       vertical-align: top;
     }
+
   </style>
   <script src="URI.js"></script>
   <!-- https://github.com/joewalnes/reconnecting-websocket -->
@@ -119,15 +120,15 @@
       result = "";
       for (const pattern of patterns) {
         for (const stat of stats) {
-          if (stat[0].match(pattern)) {
-            text = stat[0];
-            major = stat[1];
-            minor = stat[2];
-            if (stat.length > 3) {
-              text = stat[3];
+          if (stat.name.match(pattern)) {
+            text = stat.name;
+            major = stat.primary_resource;
+            minor = stat.secondary_resource;
+            if (stat.alternative_display !== null) {
+              text = stat.alternative_display;
             }
-            major = Math.floor(width * Math.max(0, Math.min(major / 100, 1)));
-            minor = Math.floor(width * Math.max(0, Math.min(minor / 100, 1)));
+            major = Math.floor(width * Math.max(0, Math.min(major / stat.theoretical_maximum, 1)));
+            minor = Math.floor(width * Math.max(0, Math.min(minor / stat.theoretical_maximum, 1)));
             result += "<span class=major>";
             for (j = 0; j < major; ++j) {
               result += (j < text.length ? text[j] : "&nbsp;");
