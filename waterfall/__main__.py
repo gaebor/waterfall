@@ -1,13 +1,13 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from time import sleep
 
-from waterfall import providers, parse_column_descriptors, print_line
+from waterfall import providers, parse_column_descriptors, print_line, add_descriptor_arguments
 
 
 def main():
     args = get_args()
     counter = 0
-    while counter < args.n or args.n == 0:
+    while counter < args.n or args.n <= 0:
         print_line(providers.every(), args.descriptors)
         sleep(args.refresh)
         counter += 1
@@ -23,14 +23,7 @@ def get_args():
         help='specifies the number of iterations to take. ' 'If 0 then runs in an infinite loop',
     )
     parser.add_argument('--refresh', default=2, help='seconds', type=int)
-    parser.add_argument(
-        '--descriptors',
-        nargs="*",
-        type=str,
-        default=['.*'],
-        help='pattern [factor [width]] [pattern [factor [width]]] ... where `pattern` is a regex, '
-        '`factor` is an float and `width` is an integer',
-    )
+    add_descriptor_arguments(parser)
     args = parser.parse_args()
     args.descriptors = parse_column_descriptors(args.descriptors, args.width)
     return args

@@ -5,7 +5,7 @@ import tornado.ioloop
 import tornado.gen
 from tornado.websocket import websocket_connect
 
-from waterfall import print_line, parse_column_descriptors
+from waterfall import print_line, parse_column_descriptors, add_descriptor_arguments
 
 
 def get_args():
@@ -14,14 +14,7 @@ def get_args():
     parser.add_argument('--hostname', default='localhost', help=' ')
     parser.add_argument('--url', help=' ')
     parser.add_argument('--width', default=20, help=' ', type=int)
-    parser.add_argument(
-        '--descriptors',
-        nargs="*",
-        type=str,
-        default=['.*', '100', '10'],
-        help='pattern [factor [width]] [pattern [factor [width]]] ... where `pattern` is a regex, '
-        '`factor` is an float and `width` is an integer',
-    )
+    add_descriptor_arguments(parser)
     args = parser.parse_args()
     args.descriptors = parse_column_descriptors(args.descriptors, args.width)
     return args

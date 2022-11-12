@@ -1,6 +1,7 @@
 from typing import List, Dict, Iterable
 from re import search
 from dataclasses import dataclass
+from argparse import ArgumentParser
 
 from termcolor import colored
 
@@ -42,6 +43,17 @@ def parse_column_descriptors(argv, default_width) -> Dict[str, Descriptor]:
             i += 1
 
     return list(column_descriptors.values())
+
+
+def add_descriptor_arguments(parser: ArgumentParser):
+    parser.add_argument(
+        '--descriptors',
+        nargs="*",
+        type=str,
+        default=['.*'],
+        help='a DESCRIPTOR is such: `pattern [factor [width]]` where `pattern` is a regex, '
+        '`factor` is a float and `width` is an integer',
+    )
 
 
 def print_line(messages: List[Metric], descriptors: Iterable[Descriptor]):
