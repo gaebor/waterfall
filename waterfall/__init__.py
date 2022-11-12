@@ -59,27 +59,27 @@ def add_descriptor_arguments(parser: ArgumentParser):
 def print_line(messages: List[Metric], descriptors: Iterable[Descriptor]):
     printed = False
     for descriptor in descriptors:
-        relevant_messages = [
-            metric for metric in messages if search(descriptor.pattern, metric.name)
-        ]
-        for metric in relevant_messages:
-            printed = True
-            text = (
-                metric.name if metric.alternative_display is None else metric.alternative_display
-            )
-            factor = descriptor.width / (
-                descriptor.factor if descriptor.factor else metric.theoretical_maximum
-            )
-            print(
-                render_bars(
-                    text,
-                    int(round(factor * metric.primary_resource)),
-                    int(round(factor * metric.secondary_resource)),
-                    width=descriptor.width,
-                    additive=metric.additive,
-                ),
-                end='',
-            )
+        for metric in messages:
+            if search(descriptor.pattern, metric.name) is not None:
+                printed = True
+                text = (
+                    metric.name
+                    if metric.alternative_display is None
+                    else metric.alternative_display
+                )
+                factor = descriptor.width / (
+                    descriptor.factor if descriptor.factor else metric.theoretical_maximum
+                )
+                print(
+                    render_bars(
+                        text,
+                        int(round(factor * metric.primary_resource)),
+                        int(round(factor * metric.secondary_resource)),
+                        width=descriptor.width,
+                        additive=metric.additive,
+                    ),
+                    end='',
+                )
     if printed:
         print('', flush=True)
 
