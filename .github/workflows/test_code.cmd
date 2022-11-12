@@ -20,7 +20,7 @@ START "waterfall.server" python -m waterfall.server
 START /B "waterfall.client" python -m waterfall.client
 START "waterfall.client" python -m waterfall.client
 
-TIMEOUT /T 20 /NOBREAK 2> nul
+ping 127.0.0.1 -n 10 > nul
 
 TASKLIST /FI "STATUS EQ running" /FI "WINDOWTITLE EQ waterfall.server" /NH | findstr /I python
 IF %ERRORLEVEL% NEQ 0 (exit 1)
