@@ -33,37 +33,37 @@ class Metric:
     additive: bool = True
 
 
-class time_diff:
-    def __init__(self, f):
-        self.f = f
+class TimeDiff:
+    def __init__(self, provider):
+        self.provider = provider
         self.time = time()
         self.previous = {}
 
     def __call__(self):
-        results = self.f()
+        metrics = self.provider()
         derived_values = []
         current_time = time()
         time_diff = current_time - self.time
-        for result in results:
-            if result.name in self.previous:
-                previous = self.previous[result.name]
+        for metric in metrics:
+            if metric.name in self.previous:
+                previous = self.previous[metric.name]
                 derived_values.append(
                     dataclasses.replace(
-                        result,
-                        primary_resource=(result.primary_resource - previous.primary_resource)
+                        metric,
+                        primary_resource=(metric.primary_resource - previous.primary_resource)
                         / time_diff,
                         secondary_resource=(
-                            result.secondary_resource - previous.secondary_resource
+                            metric.secondary_resource - previous.secondary_resource
                         )
                         / time_diff,
                     )
                 )
-            self.previous[result.name] = result
+            self.previous[metric.name] = metric
         self.time = current_time
         return derived_values
 
 
-@time_diff
+@TimeDiff
 def disk():
     for disk_name, disk_io in psutil.disk_io_counters(perdisk=True).items():
         yield Metric(
@@ -107,7 +107,7 @@ def cpu():
     return cpu_infos
 
 
-@time_diff
+@TimeDiff
 def net():
     for nic_name, nic_io in psutil.net_io_counters(pernic=True).items():
         yield Metric(
