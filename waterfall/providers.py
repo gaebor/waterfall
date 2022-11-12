@@ -102,8 +102,8 @@ def cpu():
     if len(frequencies) == 1:
         cpu_infos[-1].alternative_display = str(frequencies[0].current) + 'MHz'
     elif len(frequencies) == len(cpu_infos) - 1:
-        for i in range(len(frequencies)):
-            cpu_infos[i].alternative_display = str(frequencies[i].current) + 'MHz'
+        for cpu_info, frequency in zip(cpu_infos, frequencies):
+            cpu_info.alternative_display = str(frequency.current) + 'MHz'
     return cpu_infos
 
 
