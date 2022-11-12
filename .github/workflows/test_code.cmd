@@ -19,7 +19,7 @@ IF %ERRORLEVEL% NEQ 0 (exit 1)
 START /B "waterfall.server" python -m waterfall.server
 START /B "waterfall.client" python -m waterfall.client
 
-TIMEOUT /T 10 /NOBREAK
+TIMEOUT /T 10 /NOBREAK > nul
 
 TASKLIST /FI "STATUS EQ running" /FI "WINDOWTITLE EQ waterfall.server" /NH | findstr /I python
 IF %ERRORLEVEL% NEQ 0 (exit 1)
