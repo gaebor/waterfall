@@ -9,5 +9,5 @@ python -m pip install .[webserver]
 python -m waterfall.server -h
 python -m waterfall.client -h
 
-timeout 20 python -m waterfall.server &
+python -m waterfall.server &
 timeout 10 python -m waterfall.client || [ $? -eq 124 ]
