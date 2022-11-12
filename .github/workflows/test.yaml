@@ -6,7 +6,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Linter
-      run: python3 -m pip install pylint black .[server]
+      run: python3 -m pip install pylint black .[webserver]
     - name: Check Code
       run: |
         black --check --line-length 99 --skip-string-normalization setup.py waterfall
