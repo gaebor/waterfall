@@ -12,9 +12,7 @@ def convert_size(size_bytes, table, base):
     if size_bytes == 0:
         return "0" + table[0]
     i = min(int(logarithm(size_bytes, base)), len(table) - 1)
-    p = base**i
-    s = round(size_bytes / p, 2)
-    return "{:g}{:s}".format(s, table[i])
+    return f"{round(size_bytes / base**i, 2):g}{table[i]:s}"
 
 
 def convert_size_2(bytes):
