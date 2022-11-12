@@ -1,6 +1,7 @@
 from itertools import chain
 from math import log as logarithm
 from time import time
+import dataclasses
 
 import psutil
 
@@ -24,6 +25,16 @@ def convert_size_10(size):
     return convert_size(size, ("", "k", "M", "G", "T", "P", "E", "Z", "Y"), 1000)
 
 
+@dataclasses.dataclass
+class Metric:
+    name: str
+    primary_resource: float
+    secondary_resource: float = 0.0
+    alternative_display: str = None
+    additive: bool = True
+    theoretical_maximum_hint: float = 0.0
+
+
 class time_diff:
     def __init__(self, f):
         self.f = f
@@ -36,17 +47,20 @@ class time_diff:
         current_time = time()
         time_diff = current_time - self.time
         for result in results:
-            if result[0] in self.previous:
-                previous = self.previous[result[0]]
+            if result.name in self.previous:
+                previous = self.previous[result.name]
                 derived_values.append(
-                    (
-                        result[0],
-                        (result[1] - previous[1]) / time_diff,
-                        (result[2] - previous[2]) / time_diff,
+                    dataclasses.replace(
+                        result,
+                        primary_resource=(result.primary_resource - previous.primary_resource)
+                        / time_diff,
+                        secondary_resource=(
+                            result.secondary_resource - previous.secondary_resource
+                        )
+                        / time_diff,
                     )
-                    + result[3:]
                 )
-            self.previous[result[0]] = result
+            self.previous[result.name] = result
         self.time = current_time
         return derived_values
 
@@ -54,7 +68,13 @@ class time_diff:
 @time_diff
 def disk():
     for disk_name, disk_io in psutil.disk_io_counters(perdisk=True).items():
-        yield disk_name, disk_io.read_bytes / 1250000, disk_io.write_bytes / 1250000, '', False
+        yield Metric(
+            disk_name,
+            disk_io.read_bytes,
+            disk_io.write_bytes,
+            additive=False,
+            theoretical_maximum_hint=125000000,
+        )
 
 
 def cpu():
@@ -64,42 +84,50 @@ def cpu():
     padding = int(logarithm(len(cpu_times), 10)) + 1
 
     cpu_infos = [
-        [f'cpu{i:0{padding}d}', cpu_time.user, cpu_time.system, '', True]
+        Metric(f'cpu{i:0{padding}d}', cpu_time.user, cpu_time.system, theoretical_maximum_hint=100)
         for i, cpu_time in enumerate(cpu_times)
     ]
     cpu_infos.append(
-        [
+        Metric(
             'cpu',
-            sum(x[1] for x in cpu_infos) / len(cpu_infos),
-            sum(x[2] for x in cpu_infos) / len(cpu_infos),
-            '',
-            True,
-        ]
+            sum(x.primary_resource for x in cpu_infos),
+            sum(x.secondary_resource for x in cpu_infos),
+            theoretical_maximum_hint=len(cpu_infos) * 100,
+        )
     )
 
     if len(frequencies) == 1:
-        cpu_infos[-1][-2] = str(frequencies[0].current) + 'MHz'
+        cpu_infos[-1].alternative_display = str(frequencies[0].current) + 'MHz'
     elif len(frequencies) == len(cpu_infos) - 1:
         for i in range(len(frequencies)):
-            cpu_infos[i][-2] = str(frequencies[i].current) + 'MHz'
+            cpu_infos[i].alternative_display = str(frequencies[i].current) + 'MHz'
     return cpu_infos
 
 
 @time_diff
 def net():
     for nic_name, nic_io in psutil.net_io_counters(pernic=True).items():
-        yield nic_name, nic_io.bytes_recv / 1250000, nic_io.bytes_sent / 1250000, '', False
+        yield Metric(
+            nic_name,
+            nic_io.bytes_recv,
+            nic_io.bytes_sent,
+            additive=False,
+            theoretical_maximum_hint=125000000,
+        )
 
 
 def memory():
     mem_usage = psutil.virtual_memory()
     total = mem_usage.total
     return [
-        (
+        Metric(
             'memory',
             mem_usage.percent,
-            0,
-            f'{convert_size_2(mem_usage.percent * total / 100)}B / {convert_size_2(total)}B',
+            alternative_display=(
+                f'{convert_size_2(mem_usage.percent * total / 100)}B'
+                f' / {convert_size_2(total)}B'
+            ),
+            theoretical_maximum_hint=100,
         )
     ]
 
@@ -125,12 +153,20 @@ else:
             utilization = nvmlDeviceGetUtilizationRates(handle)
             gpu_percent, memory_percent = utilization.gpu, utilization.memory
 
-            yield (f'gpu{i:0{padding}d}', gpu_percent, 0, f'{name} ({i})')
-            yield (
+            yield Metric(
+                f'gpu{i:0{padding}d}',
+                gpu_percent,
+                alternative_display=f'{name} ({i})',
+                theoretical_maximum_hint=100,
+            )
+            yield Metric(
                 f'gpu{i:0{padding}d} memory',
                 memory_percent,
-                0,
-                f'{convert_size_2(memory_percent * total_memory / 100)}B / {convert_size_2(total_memory)}B',
+                theoretical_maximum_hint=100,
+                alternative_display=(
+                    f'{convert_size_2(memory_percent * total_memory / 100)}B'
+                    f' / {convert_size_2(total_memory)}B'
+                ),
             )
         nvmlShutdown()
 
