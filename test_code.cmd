@@ -16,8 +16,8 @@ IF %ERRORLEVEL% NEQ 0 (exit 1)
 python -m waterfall.client -h
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 
-START "waterfall.server" python -m waterfall.server
-START "waterfall.client" python -m waterfall.client
+START /B "waterfall.server" python -m waterfall.server
+START /B "waterfall.client" python -m waterfall.client
 
 TIMEOUT /T 10
 
