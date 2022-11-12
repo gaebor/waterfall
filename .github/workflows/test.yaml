@@ -1,0 +1,40 @@
+name: test
+on: push
+defaults:
+  run:
+    shell: cmd
+jobs:
+  code-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Linter
+      run: python3 -m pip install pylint black
+    - name: Check Code
+      run: |
+        black --check --line-length 99 --skip-string-normalization setup.py waterfall
+        pylint --disable=C0114,C0116 --fail-under 10 setup.py waterfall
+  ubuntu18:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install
+      run: python3 -m pip install .
+    - name: Test Import
+      run: |
+        cd \
+        python -m waterfall -h
+    - name: Test Run
+      run: python3 -m waterfall -n 2
+  windows2019:
+    runs-on: windows-2019
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install
+      run: python -m pip install .
+    - name: Test Import
+      run: |
+        C:
+        python -m waterfall -h
+    - name: Test Run
+      run: python -m waterfall -n 2
