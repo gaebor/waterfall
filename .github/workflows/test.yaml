@@ -43,13 +43,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test
-      run: cmd test_code.cmd
+      shell: cmd
+      run: test_code.cmd
   windows2022:
     runs-on: windows-2022
     steps:
     - uses: actions/checkout@v2
     - name: Test
-      run: cmd test_code.cmd
+      shell: cmd
+      run: test_code.cmd
   macos11:
     runs-on: macos-11
     steps:
