@@ -1,8 +1,5 @@
 name: test
 on: push
-defaults:
-  run:
-    shell: cmd
 jobs:
   code-check:
     runs-on: ubuntu-latest
