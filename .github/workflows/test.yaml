@@ -8,9 +8,7 @@ jobs:
     - name: Install Linter
       run: python3 -m pip install pylint black .[webserver]
     - name: Check Code
-      run: |
-        black --check --line-length 99 --skip-string-normalization setup.py waterfall
-        pylint --disable=C0114,C0115,C0116 --fail-under 10 --max-line-length 99 setup.py waterfall
+      run: bash check_code.cmd
   ubuntu18:
     runs-on: ubuntu-18.04
     steps:
@@ -18,23 +16,37 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: Install
-      run: python3 -m pip install .
-    - name: Test Import
-      run: |
-        cd /
-        python -m waterfall -h
-    - name: Test Run
-      run: python3 -m waterfall -n 2
+    - run: bash test_code.cmd
+  ubuntu20:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - run: bash test_code.cmd
+  ubuntu22:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.10
+    - run: bash test_code.cmd
   windows2019:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
-    - name: Install
-      run: python -m pip install .
-    - name: Test Import
-      run: |
-        C:
-        python -m waterfall -h
-    - name: Test Run
-      run: python -m waterfall -n 2
+    - uses: actions/setup-python@v2
+    - run: test_code.cmd
+  windows2022:
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+    - run: test_code.cmd
+  macos:
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v2
+    - run: bash test_code.cmd
