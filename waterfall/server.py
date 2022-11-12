@@ -8,7 +8,7 @@ import tornado.options
 import tornado.web
 import tornado.websocket
 
-from waterfall.providers import all as all_providers
+from waterfall.providers import every as all_providers
 
 
 def get_args():
