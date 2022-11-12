@@ -7,10 +7,10 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install Linter
       run: python3 -m pip install pylint black .[webserver]
-    - name: Check Code
-      run: |
-        black --check --line-length 99 --skip-string-normalization setup.py waterfall
-        pylint --min-public-methods=1 --disable=C0114,C0115,C0116 --fail-under 10 --max-line-length 99 setup.py waterfall
+    - name: black
+      run: black --check --line-length 99 --skip-string-normalization setup.py waterfall
+    - name: pylint
+      run: pylint --min-public-methods=1 --disable=C0114,C0115,C0116 --fail-under 10 --max-line-length 99 setup.py waterfall
   ubuntu18:
     runs-on: ubuntu-18.04
     steps:
@@ -43,18 +43,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
-    - name: Print
-      run: |
-        dir
     - name: Test
-      run: test_code.cmd
+      run: cmd test_code.cmd
   windows2022:
     runs-on: windows-2022
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
     - name: Test
-      run: test_code.cmd
+      run: cmd test_code.cmd
   macos11:
     runs-on: macos-11
     steps:
