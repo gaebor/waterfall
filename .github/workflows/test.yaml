@@ -22,7 +22,7 @@ jobs:
       run: python3 -m pip install .
     - name: Test Import
       run: |
-        cd \
+        cd /
         python -m waterfall -h
     - name: Test Run
       run: python3 -m waterfall -n 2
