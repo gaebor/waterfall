@@ -1,7 +1,8 @@
 from typing import List, Dict, Iterable
 from re import search
-from termcolor import colored
 from dataclasses import dataclass
+
+from termcolor import colored
 
 from waterfall.providers import Metric
 
@@ -114,7 +115,7 @@ def render_with_colors(text: str, attributes, width: int):
     return result
 
 
-def text_cap(s, width):
+def text_cap(string, width):
     if width == 0:
         return ''
-    return f'{s[:width]:{width}s}'
+    return f'{string[:width]:{width}s}'
