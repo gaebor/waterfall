@@ -15,8 +15,8 @@ def convert_size(size_bytes, table, base):
     return f"{round(size_bytes / base**i, 2):g}{table[i]:s}"
 
 
-def convert_size_2(bytes):
-    return convert_size(bytes, ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"), 1024)
+def convert_size_2(size):
+    return convert_size(size, ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"), 1024)
 
 
 def convert_size_10(size):
