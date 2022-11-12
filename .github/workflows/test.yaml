@@ -41,6 +41,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
+    - name: Print
+      run: |
+        dir
     - name: Test
       run: test_code.cmd
   windows2022:
