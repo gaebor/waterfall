@@ -5,7 +5,7 @@ python -m waterfall -h
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 python -m waterfall -n 2
 IF %ERRORLEVEL% NEQ 0 (exit 1)
-python -m waterfall -n 2 --descriptors "^^cpu0" 10 "cpu$" memory 100 20 --width 10
+python -m waterfall -n 2 --descriptors memory 100 20  "^^cpu0" 10 "cpu$" --width 10
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 
 python -m pip install .[webserver]
@@ -20,7 +20,7 @@ START "waterfall.server" python -m waterfall.server
 START /B "waterfall.client" python -m waterfall.client
 START "waterfall.client" python -m waterfall.client
 
-TIMEOUT /T 10 /NOBREAK 2> nul
+TIMEOUT /T 20 /NOBREAK 2> nul
 
 TASKLIST /FI "STATUS EQ running" /FI "WINDOWTITLE EQ waterfall.server" /NH | findstr /I python
 IF %ERRORLEVEL% NEQ 0 (exit 1)
