@@ -1,19 +1,12 @@
 python -m pip install .
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 
-python -m waterfall -h
-IF %ERRORLEVEL% NEQ 0 (exit 1)
 python -m waterfall -n 2
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 python -m waterfall -n 2 --descriptors memory 100 20  "^^cpu0" 10 "cpu$" --width 10
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 
 python -m pip install .[webserver]
-IF %ERRORLEVEL% NEQ 0 (exit 1)
-
-python -m waterfall.server -h
-IF %ERRORLEVEL% NEQ 0 (exit 1)
-python -m waterfall.client -h
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 
 START "waterfall.server" python -m waterfall.server --html
