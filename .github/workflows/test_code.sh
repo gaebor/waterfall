@@ -9,5 +9,7 @@ python -m pip install .[webserver]
 python -m waterfall.server -h
 python -m waterfall.client -h
 
-python -m waterfall.server &
+python -m waterfall.server --html &
 timeout 10 python -m waterfall.client || [ $? -eq 124 ]
+
+curl -f http://localhost:8888
