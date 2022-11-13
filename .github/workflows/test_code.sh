@@ -6,7 +6,9 @@ python -m waterfall -n 2 --descriptors '^cpu0' 10 'cpu$' memory 100 20 --width 1
 python -m pip install .[webserver]
 
 python -m waterfall.server --html &
-ERRORS=`timeout 10 python -m waterfall.client 1>&2 2>&1 || [ $? -eq 124 ]`
+sleep 1
+ERRORS=`timeout 10 python -m waterfall.client 3>&2 2>&1 1>&3 || [ $? -eq 124 ]`
+echo "$ERRORS"
 [ -z "$ERRORS" ]
 
 RESPONSE=`curl --fail --max-time 2 http://localhost:8888 | file -`
