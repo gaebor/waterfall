@@ -1,18 +1,17 @@
-import argparse
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sys import stderr
 from os.path import dirname
 
 from tornado.escape import json_encode
-import tornado.ioloop
-import tornado.options
-from tornado.web import Application
+from tornado.ioloop import IOLoop, PeriodicCallback
+from tornado.web import Application, StaticFileHandler
 from tornado.websocket import WebSocketHandler, WebSocketClosedError
 
 from waterfall.providers import every as all_providers
 
 
 def get_args():
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('--port', default=8888, help=' ', type=int)
     parser.add_argument('--refresh', default=2000, help='milliseconds', type=int)
     parser.add_argument(
@@ -26,17 +25,15 @@ def get_args():
     args = parser.parse_args()
     return args
 
+
 def make_application(enable_html):
     handlers = [(r"/waterfall", StatsServer)]
     if enable_html:
-	handlers.append(
-                (
-                    r"/(.*)",
-                    tornado.web.StaticFileHandler,
-                    {'path': '', 'default_filename': "index.html"},
-                )
-            )
+        handlers.append(
+            (r"/(.*)", StaticFileHandler, {'path': '', 'default_filename': "index.html"})
+        )
     return Application(handlers, static_path=dirname(__file__))
+
 
 # pylint: disable=abstract-method
 class StatsServer(WebSocketHandler):
@@ -79,9 +76,7 @@ class TimedFunction:
 
     def run(self):
         payload = self.update_stats()
-        StatsServer.send_updates(
-            json_encode([metric.__dict__ for metric in payload])
-        )
+        StatsServer.send_updates(json_encode([metric.__dict__ for metric in payload]))
 
 
 def main():
@@ -89,9 +84,9 @@ def main():
 
     app = make_application(args.html)
     app.listen(args.port)
-    loop = tornado.ioloop.IOLoop.current()
+    loop = IOLoop.current()
     timer = TimedFunction()
-    tornado.ioloop.PeriodicCallback(timer.run, args.refresh).start()
+    PeriodicCallback(timer.run, args.refresh).start()
     loop.start()
 
 
