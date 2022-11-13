@@ -1,6 +1,5 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sys import stderr
-from os.path import dirname
 from pathlib import Path
 
 from tornado.escape import json_encode
