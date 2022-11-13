@@ -14,4 +14,5 @@ ERRORS=`timeout 10 python -m waterfall.client 1>&2 2>&1 || [ $? -eq 124 ]`
 [ -z "$ERRORS" ]
 
 RESPONSE=`curl --fail --max-time 2 http://localhost:8888`
-[ -n "`echo "$RESPONSE" | file - | grep HTML`" ]
+echo "$RESPONSE"
+[ `echo "$RESPONSE" | file - | grep HTML | wc -l` -gt 0 ]
