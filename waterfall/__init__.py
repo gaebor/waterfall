@@ -5,14 +5,22 @@ from argparse import ArgumentParser
 
 from termcolor import colored
 
-from waterfall.providers import Metric
-
 
 @dataclass
 class Descriptor:
     pattern: str
     width: int
     factor: int = None
+
+
+@dataclass
+class Metric:
+    name: str
+    primary_resource: float
+    theoretical_maximum: float
+    secondary_resource: float = 0.0
+    alternative_display: str = None
+    additive: bool = True
 
 
 def parse_column_descriptors(argv, default_width) -> Dict[str, Descriptor]:

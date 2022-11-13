@@ -5,8 +5,7 @@ import tornado.ioloop
 import tornado.gen
 from tornado.websocket import websocket_connect
 
-from waterfall import print_line, parse_column_descriptors, add_descriptor_arguments
-from waterfall.providers import Metric
+from waterfall import print_line, parse_column_descriptors, add_descriptor_arguments, Metric
 
 
 def get_args():

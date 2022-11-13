@@ -10,7 +10,7 @@ jobs:
     - name: black
       run: black --check --line-length 99 --skip-string-normalization setup.py waterfall
     - name: pylint
-      run: pylint --min-public-methods=1 --disable=C0114,C0115,C0116 --fail-under 10 --max-line-length 99 setup.py waterfall
+      run: pylint --disable=C0114,C0115,C0116 --fail-under 10 --max-line-length 99 setup.py waterfall
   ubuntu20:
     runs-on: ubuntu-20.04
     steps:

@@ -5,6 +5,8 @@ import dataclasses
 
 import psutil
 
+from waterfall import Metric
+
 
 def convert_size(size_bytes, table, base):
     if len(table) == 0 or base <= 0:
@@ -23,16 +25,7 @@ def convert_size_10(size):
     return convert_size(size, ("", "k", "M", "G", "T", "P", "E", "Z", "Y"), 1000)
 
 
-@dataclasses.dataclass
-class Metric:
-    name: str
-    primary_resource: float
-    theoretical_maximum: float
-    secondary_resource: float = 0.0
-    alternative_display: str = None
-    additive: bool = True
-
-
+# pylint: disable=too-few-public-methods
 class TimeDiff:
     def __init__(self, provider):
         self.provider = provider
