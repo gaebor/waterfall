@@ -35,10 +35,10 @@ class Application(tornado.web.Application):
                 (
                     r"/(.*)",
                     tornado.web.StaticFileHandler,
-                    {'path': dirname(__file__), 'default_filename': "index.html"},
+                    {'path': '', 'default_filename': "index.html"},
                 )
             )
-        super().__init__(handlers)
+        super().__init__(handlers, static_path=dirname(__file__))
 
 
 # pylint: disable=abstract-method
