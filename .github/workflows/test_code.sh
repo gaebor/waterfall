@@ -10,7 +10,7 @@ python -m waterfall.server -h
 python -m waterfall.client -h
 
 python -m waterfall.server --html &
-ERRORS=`timeout 10 python -m waterfall.client 2>&1 1>&2 || [ $? -eq 124 ]`
+ERRORS=`timeout 10 python -m waterfall.client 1>&2 2>&1 || [ $? -eq 124 ]`
 [ -z "$ERRORS" ]
 
 RESPONSE=`curl --fail --max-time 2 http://localhost:8888`
