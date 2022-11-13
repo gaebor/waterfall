@@ -26,20 +26,17 @@ def get_args():
     args = parser.parse_args()
     return args
 
-
-class Application(tornado.web.Application):
-    def __init__(self, enable_html):
-        handlers = [(r"/waterfall", StatsServer)]
-        if enable_html:
-            handlers.append(
+def make_application(enable_html):
+    handlers = [(r"/waterfall", StatsServer)]
+    if enable_html:
+	handlers.append(
                 (
                     r"/(.*)",
                     tornado.web.StaticFileHandler,
                     {'path': '', 'default_filename': "index.html"},
                 )
             )
-        super().__init__(handlers, static_path=dirname(__file__))
-
+    return tornado.web.Application(handlers, static_path=dirname(__file__))
 
 # pylint: disable=abstract-method
 class StatsServer(tornado.websocket.WebSocketHandler):
@@ -90,7 +87,7 @@ class TimedFunction:
 def main():
     args = get_args()
 
-    app = Application(args.html)
+    app = make_application(args.html)
     app.listen(args.port)
     loop = tornado.ioloop.IOLoop.current()
     timer = TimedFunction()
