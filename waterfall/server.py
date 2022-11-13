@@ -2,11 +2,11 @@ import argparse
 from sys import stderr
 from os.path import dirname
 
-import tornado.escape
+from tornado.escape import json_encode
 import tornado.ioloop
 import tornado.options
-import tornado.web
-import tornado.websocket
+from tornado.web import Application
+from tornado.websocket import WebSocketHandler, WebSocketClosedError
 
 from waterfall.providers import every as all_providers
 
@@ -36,10 +36,10 @@ def make_application(enable_html):
                     {'path': '', 'default_filename': "index.html"},
                 )
             )
-    return tornado.web.Application(handlers, static_path=dirname(__file__))
+    return Application(handlers, static_path=dirname(__file__))
 
 # pylint: disable=abstract-method
-class StatsServer(tornado.websocket.WebSocketHandler):
+class StatsServer(WebSocketHandler):
     waiters = set()
 
     def check_origin(self, origin):
@@ -64,7 +64,7 @@ class StatsServer(tornado.websocket.WebSocketHandler):
 
             try:
                 waiter.write_message(payload)
-            except tornado.websocket.WebSocketClosedError:
+            except WebSocketClosedError:
                 print(f"Error sending message to {waiter}", exc_info=True, file=stderr)
             else:
                 print(f"Message sent to {waiter}", file=stderr)
@@ -80,7 +80,7 @@ class TimedFunction:
     def run(self):
         payload = self.update_stats()
         StatsServer.send_updates(
-            tornado.escape.json_encode([metric.__dict__ for metric in payload])
+            json_encode([metric.__dict__ for metric in payload])
         )
 
 
