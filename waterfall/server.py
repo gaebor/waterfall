@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sys import stderr
 from os.path import dirname
+from pathlib import Path
 
 from tornado.escape import json_encode
 from tornado.ioloop import IOLoop, PeriodicCallback
@@ -29,10 +30,11 @@ def get_args():
 def make_application(enable_html):
     handlers = [(r"/waterfall", StatsServer)]
     if enable_html:
+        path = Path(__file__).parent.parent / 'static'
         handlers.append(
-            (r"/(.*)", StaticFileHandler, {'path': '', 'default_filename': "index.html"})
+            (r"/(.*)", StaticFileHandler, {'path': path, 'default_filename': "index.html"})
         )
-    return Application(handlers, static_path=dirname(__file__))
+    return Application(handlers)
 
 
 # pylint: disable=abstract-method
