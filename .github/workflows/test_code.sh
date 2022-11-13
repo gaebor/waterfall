@@ -10,9 +10,8 @@ python -m waterfall.server -h
 python -m waterfall.client -h
 
 python -m waterfall.server --html &
-ERRORS=`timeout 10 python -m waterfall.client 2>&1 > client.output.txt || [ $? -eq 124 ]`
-cat client.output.txt
+ERRORS=`timeout 10 python -m waterfall.client 2>&1 1>&2 || [ $? -eq 124 ]`
 [ -z "$ERRORS" ]
 
-RESPONSE=`curl --fail --max-time 2 --no-progress-meter http://localhost:8888`
+RESPONSE=`curl --fail --max-time 2 http://localhost:8888`
 [ -n "`echo "$RESPONSE" | file - | grep HTML`" ]

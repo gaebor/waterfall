@@ -25,5 +25,5 @@ ping 127.0.0.1 -n 10 > nul
 TASKLIST /FI "STATUS EQ running" /FI "WINDOWTITLE EQ waterfall.client" /NH | findstr /I python
 IF %ERRORLEVEL% NEQ 0 (exit 1)
 
-curl --fail --max-time 2 --no-progress-meter http://localhost:8888
+curl --fail --max-time 2 http://localhost:8888
 IF %ERRORLEVEL% NEQ 0 (exit 1)
