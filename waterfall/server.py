@@ -59,7 +59,6 @@ class StatsServer(WebSocketHandler):
     @classmethod
     def send_updates(cls, payload):
         for waiter in cls.waiters:
-
             try:
                 waiter.write_message(payload)
             except WebSocketClosedError:
