@@ -9,7 +9,10 @@ setup(
     author_email='borbely@math.bme.hu',
     url='https://github.com/gaebor/waterfall',
     license='MIT',
-    install_requires=['termcolor', 'psutil'],
+    install_requires=[
+        'termcolor',
+        'psutil',
+    ],
     extras_require={'webserver': ['tornado']},
     packages=['waterfall'],
 )
