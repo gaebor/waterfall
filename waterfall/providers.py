@@ -135,7 +135,7 @@ def gpu():
         padding = int(logarithm(num_devices, 10)) + 1
     for i in range(num_devices):
         handle = nvmlDeviceGetHandleByIndex(i)
-        name = nvmlDeviceGetName(handle).decode("ascii")
+        name = nvmlDeviceGetName(handle)
         total_memory = nvmlDeviceGetMemoryInfo(handle).total
         utilization = nvmlDeviceGetUtilizationRates(handle)
         gpu_percent, memory_percent = utilization.gpu, utilization.memory
