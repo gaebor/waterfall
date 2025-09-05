@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "waterfall"
+maintainers = [
+    {name = "Gábor Borbély", email = "borbely@math.bme.hu"},
+]
+description = "monitoring utility"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "termcolor",
+    "psutil"
+]
+license = "MIT"
+
+[project.optional-dependencies]
+webserver = ["tornado"]
+nvidia = ["nvidia-ml-py"]
+
+[project.urls]
+Repository = "https://github.com/gaebor/waterfall.git"
+
+[tool.setuptools]
+packages = [
+    "waterfall"
+]
