@@ -159,7 +159,7 @@ def gpu():
 
 
 try:
-    from pynvml.nvml import (
+    from pynvml import (
         nvmlInit,
         nvmlDeviceGetCount,
         nvmlDeviceGetHandleByIndex,
